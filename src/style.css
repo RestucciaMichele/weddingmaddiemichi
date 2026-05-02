@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+@plugin "daisyui" {
+   themes: light --default;
+}
+
+:root {
+  --primary-color: #86343c;
+  --primary-bg: #fff2f2;
+}
+
+body {
+  font-family: 'Savoye', sans-serif;
+	margin: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+.router-link-active {
+  font-weight: bold;
+  color: var(--primary-color);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 10px;
+  text-decoration-color: var(--primary-color);
+}
+
+.btn {
+  border-color: var(--primary-color);
+  background-color: var(--primary-bg);
+  color: var(--primary-color);
+}
+
+.btn:hover {
+  background-color: var(--primary-color);
+  color: var(--primary-bg);
+}
+
+.router-link-active.btn {
+  background-color: var(--primary-color);
+  color: var(--primary-bg);
+  text-decoration: none;
+}
+
+.color-navbar,
+.color-footer {
+  background-color: var(--primary-bg);
+  color: var(--primary-color);
+}
+
+.navbar {
+  transform: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.scroll-section {
+  position: relative;
+  z-index: 1;
+}

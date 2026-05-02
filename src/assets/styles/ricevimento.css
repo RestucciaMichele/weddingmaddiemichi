@@ -1,0 +1,57 @@
+.ricevimento {
+  background-image: url('../images/ricevimento.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* riquadro centrale semi-trasparente */
+.ricevimento-box {
+  background-color: rgba(255, 255, 255, 0.85); /* bianco semi-trasparente */
+  border-radius: 1rem;
+  padding: 2rem 3rem;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.ricevimento-box .title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.ricevimento-box .subtitle,
+.ricevimento-box .time,
+.ricevimento-box .address {
+  margin-bottom: .5rem;
+  font-size: 1.1rem;
+}
+
+.btn-maps {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: .75rem 1.5rem;
+  background-color: #a94442; /* colore personalizzabile */
+  color: #fff;
+  border-radius: .5rem;
+  text-decoration: none;
+  transition: background-color .3s;
+}
+
+.btn-maps:hover {
+  background-color: #922f2c;
+}
+
+@media screen and (max-width: 960px) {
+  .ricevimento {
+    min-height: 85vh;
+  }
+  .ricevimento-box {
+    padding: 1.5rem 1rem;
+  }
+}
