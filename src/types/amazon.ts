@@ -1,5 +1,6 @@
 export interface AmazonProductData {
   imageUrl: string;
+  imageKey?: string;
   title: string;
   price: number;
   sold?: boolean;

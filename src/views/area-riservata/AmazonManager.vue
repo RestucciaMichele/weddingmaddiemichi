@@ -2,9 +2,11 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import {
   addAmazonProduct,
+  deleteAmazonImage,
   deleteAmazonProduct,
   getAmazonProductsRealtime,
   updateAmazonProduct,
+  uploadAmazonImage,
   validateAmazonImageUrl,
 } from '@/services/amazon';
 import type { AmazonProductData, AmazonProductDocument } from '@/types/amazon';
@@ -19,10 +21,16 @@ const showModal = ref(false);
 const isEditing = ref(false);
 
 const showDeleteConfirmModal = ref(false);
-const productToDeleteId = ref<string | null>(null);
+const productToDelete = ref<AmazonProductDocument | null>(null);
+
+const selectedImageFile = ref<File | null>(null);
+const selectedImagePreview = ref('');
+const selectedImageObjectUrl = ref('');
+const isUploadingImage = ref(false);
 
 const getInitialProductData = (): Partial<AmazonProductDocument> => ({
   imageUrl: '',
+  imageKey: '',
   title: '',
   price: 0,
   sold: false,
@@ -32,6 +40,35 @@ const currentProduct = ref<Partial<AmazonProductDocument>>(getInitialProductData
 
 let unsubscribeFromProducts: (() => void) | undefined;
 let imageValidationRunId = 0;
+
+const revokeSelectedImageObjectUrl = () => {
+  if (selectedImageObjectUrl.value) {
+    URL.revokeObjectURL(selectedImageObjectUrl.value);
+    selectedImageObjectUrl.value = '';
+  }
+};
+
+const setSelectedImagePreview = (previewUrl: string) => {
+  revokeSelectedImageObjectUrl();
+  selectedImagePreview.value = previewUrl;
+};
+
+const handleImageChange = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  revokeSelectedImageObjectUrl();
+  selectedImageFile.value = file;
+
+  if (!file) {
+    selectedImagePreview.value = currentProduct.value.imageUrl || '';
+    return;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  selectedImageObjectUrl.value = objectUrl;
+  selectedImagePreview.value = objectUrl;
+};
 
 const validateProductsImages = async (list: AmazonProductDocument[]) => {
   const currentRun = ++imageValidationRunId;
@@ -60,13 +97,6 @@ onMounted(() => {
   });
 });
 
-onUnmounted(() => {
-  imageValidationRunId += 1;
-  if (unsubscribeFromProducts) {
-    unsubscribeFromProducts();
-  }
-});
-
 const filteredProducts = computed(() => {
   if (!searchQuery.value.trim()) {
     return products.value;
@@ -83,13 +113,23 @@ const brokenProductsCount = computed(() => {
 const openAddModal = () => {
   isEditing.value = false;
   currentProduct.value = getInitialProductData();
+  selectedImageFile.value = null;
+  setSelectedImagePreview('');
   showModal.value = true;
 };
 
 const openEditModal = (product: AmazonProductDocument) => {
   isEditing.value = true;
   currentProduct.value = { ...product };
+  selectedImageFile.value = null;
+  setSelectedImagePreview(product.imageUrl || '');
   showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+  selectedImageFile.value = null;
+  revokeSelectedImageObjectUrl();
 };
 
 const toggleSold = async (product: AmazonProductDocument) => {
@@ -104,50 +144,84 @@ const handleSave = async () => {
   const imageUrl = currentProduct.value.imageUrl?.trim() || '';
   const title = currentProduct.value.title?.trim() || '';
   const price = Number(currentProduct.value.price);
+  const existingImageKey = currentProduct.value.imageKey || '';
 
-  if (!imageUrl || !title || Number.isNaN(price) || price <= 0) {
-    console.error('Compila correttamente immagine, titolo e prezzo.');
+  if (!title || Number.isNaN(price) || price <= 0) {
+    console.error('Compila correttamente titolo e prezzo.');
     return;
   }
 
-  const payload: AmazonProductData = {
-    imageUrl,
-    title,
-    price,
-    sold: Boolean(currentProduct.value.sold),
-  };
+  if (!selectedImageFile.value && !imageUrl) {
+    console.error('Carica un immagine dal computer.');
+    return;
+  }
 
   try {
+    isUploadingImage.value = !!selectedImageFile.value;
+
+    let nextImageUrl = imageUrl;
+    let nextImageKey = existingImageKey;
+
+    if (selectedImageFile.value) {
+      const uploadedImage = await uploadAmazonImage(selectedImageFile.value);
+      nextImageUrl = uploadedImage.imageUrl;
+      nextImageKey = uploadedImage.imageKey;
+    }
+
+    const payload: AmazonProductData = {
+      imageUrl: nextImageUrl,
+      imageKey: nextImageKey,
+      title,
+      price,
+      sold: Boolean(currentProduct.value.sold),
+    };
+
     if (isEditing.value && currentProduct.value.id) {
       await updateAmazonProduct(currentProduct.value.id, payload);
+      if (selectedImageFile.value && existingImageKey && existingImageKey !== nextImageKey) {
+        await deleteAmazonImage(existingImageKey);
+      }
     } else {
       await addAmazonProduct(payload);
     }
-    showModal.value = false;
+    closeModal();
   } catch (error) {
     console.error('Errore nel salvataggio del prodotto: ', error);
+  } finally {
+    isUploadingImage.value = false;
   }
 };
 
-const handleDelete = (id: string) => {
-  productToDeleteId.value = id;
+const handleDelete = (product: AmazonProductDocument) => {
+  productToDelete.value = product;
   showDeleteConfirmModal.value = true;
 };
 
 const confirmDelete = async () => {
-  if (!productToDeleteId.value) {
+  if (!productToDelete.value) {
     return;
   }
 
   try {
-    await deleteAmazonProduct(productToDeleteId.value);
+    await deleteAmazonProduct(productToDelete.value.id);
+    if (productToDelete.value.imageKey) {
+      await deleteAmazonImage(productToDelete.value.imageKey);
+    }
   } catch (error) {
     console.error('Errore nell\'eliminazione del prodotto: ', error);
   } finally {
     showDeleteConfirmModal.value = false;
-    productToDeleteId.value = null;
+    productToDelete.value = null;
   }
 };
+
+onUnmounted(() => {
+  revokeSelectedImageObjectUrl();
+  imageValidationRunId += 1;
+  if (unsubscribeFromProducts) {
+    unsubscribeFromProducts();
+  }
+});
 
 const formattedPrice = (price: number) => {
   return new Intl.NumberFormat('it-IT', {
@@ -233,7 +307,7 @@ const formattedPrice = (price: number) => {
                 Modifica
               </button>
               <button
-                @click="handleDelete(product.id)"
+                @click="handleDelete(product)"
                 class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 transition"
               >
                 Elimina
@@ -250,15 +324,31 @@ const formattedPrice = (price: number) => {
 
         <form @submit.prevent="handleSave" class="space-y-4">
           <div>
-            <label for="imageUrl" class="block text-sm font-medium text-gray-700">URL immagine*</label>
+            <label for="imageFile" class="block text-sm font-medium text-gray-700">Immagine locale*</label>
             <input
-              id="imageUrl"
-              v-model="currentProduct.imageUrl"
-              type="url"
-              required
-              placeholder="https://..."
+              id="imageFile"
+              type="file"
+              accept="image/*"
+              :required="!isEditing || !currentProduct.imageUrl"
+              @change="handleImageChange"
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             >
+
+            <p class="mt-1 text-xs text-gray-500">
+              Seleziona un file dal computer. L'immagine verrà salvata su Cloudflare R2.
+            </p>
+
+            <div class="mt-3 overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50">
+              <img
+                v-if="selectedImagePreview"
+                :src="selectedImagePreview"
+                alt="Anteprima immagine"
+                class="h-56 w-full bg-white object-contain"
+              >
+              <div v-else class="flex h-56 items-center justify-center text-sm text-gray-400">
+                Nessuna immagine selezionata
+              </div>
+            </div>
           </div>
 
           <div>
@@ -301,16 +391,17 @@ const formattedPrice = (price: number) => {
           <div class="mt-6 flex justify-end gap-4">
             <button
               type="button"
-              @click="showModal = false"
+              @click="closeModal"
               class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition"
             >
               Annulla
             </button>
             <button
               type="submit"
-              class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition"
+              :disabled="isUploadingImage"
+              class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition disabled:opacity-60"
             >
-              {{ isEditing ? 'Salva modifiche' : 'Aggiungi' }}
+              {{ isUploadingImage ? 'Salvataggio...' : (isEditing ? 'Salva modifiche' : 'Aggiungi') }}
             </button>
           </div>
         </form>

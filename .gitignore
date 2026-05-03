@@ -27,11 +27,5 @@ dist-ssr
 
 .github/
 
-# Firebase cache
-.firebase/
-.firebaserc
-firebase.json
-*.cache
-hosting*.cache
 
 

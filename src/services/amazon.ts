@@ -12,6 +12,11 @@ import {
 const collectionName = import.meta.env.VITE_FIREBASE_AMAZON_COLLECTION || 'amazon_products';
 const amazonProductsCollectionRef = collection(db, collectionName);
 
+export interface AmazonImageUploadResult {
+  imageUrl: string;
+  imageKey: string;
+}
+
 export function getAmazonProductsRealtime(
   callback: (products: AmazonProductDocument[]) => void,
   onError?: (error: unknown) => void,
@@ -55,6 +60,38 @@ export async function updateAmazonProduct(id: string, data: Partial<AmazonProduc
 export async function deleteAmazonProduct(id: string) {
   const docRef = doc(db, collectionName, id);
   return deleteDoc(docRef);
+}
+
+export async function uploadAmazonImage(file: File): Promise<AmazonImageUploadResult> {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const response = await fetch('/api/amazon-images', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Upload immagine fallito');
+  }
+
+  return (await response.json()) as AmazonImageUploadResult;
+}
+
+export async function deleteAmazonImage(imageKey: string): Promise<void> {
+  if (!imageKey.trim()) {
+    return;
+  }
+
+  const response = await fetch(`/api/amazon-images/${encodeURIComponent(imageKey)}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Eliminazione immagine fallita');
+  }
 }
 
 export function validateAmazonImageUrl(url: string, timeoutMs = 7000): Promise<boolean> {
