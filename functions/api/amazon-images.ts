@@ -20,6 +20,18 @@ const badRequest = (message: string) => new Response(message, { status: 400 });
 export async function onRequest(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
+  // Aggiungi CORS headers per tutte le risposte
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  // Gestisci preflight OPTIONS
+  if (request.method === 'OPTIONS') {
+    return new Response('OK', { headers: corsHeaders });
+  }
+
   if (request.method === 'GET') {
     const url = new URL(request.url);
     const key = url.searchParams.get('key')?.trim();
@@ -37,6 +49,7 @@ export async function onRequest(context: { request: Request; env: Env }) {
       headers: {
         'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
         'Cache-Control': 'public, max-age=31536000, immutable',
+        ...corsHeaders,
       },
     });
   }
@@ -66,6 +79,8 @@ export async function onRequest(context: { request: Request; env: Env }) {
     return Response.json({
       imageKey: key,
       imageUrl: getImageUrl(key),
+    }, {
+      headers: corsHeaders,
     });
   }
 
@@ -78,13 +93,16 @@ export async function onRequest(context: { request: Request; env: Env }) {
     }
 
     await env.AMAZON_IMAGES.delete(key);
-    return Response.json({ ok: true });
+    return Response.json({ ok: true }, {
+      headers: corsHeaders,
+    });
   }
 
   return new Response('Method not allowed', {
     status: 405,
     headers: {
-      Allow: 'GET,POST,DELETE',
+      Allow: 'GET,POST,DELETE,OPTIONS',
+      ...corsHeaders,
     },
   });
 }

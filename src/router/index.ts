@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteLocationNormalizedLoaded, RouteRecordNormalized } from 'vue-router'
 import HomePage from '@/views/HomePage.vue'
 import {
   showNavbar,
@@ -6,6 +7,9 @@ import {
   keepNavbarVisibleInHome,
   hasNavbarVisibilityMemoryInHome,
 } from '@/stores/navbarVisibility'
+import { beginLoading, requestLoadingHide } from '@/stores/loadingScreen'
+import { waitForVideos } from '@/lib/waitForMedia'
+import { cachePageAssets } from '@/lib/pageAssetCache'
 
 const routes = [
   { path: '/', name: 'Home', component: HomePage, alias: '/home' },
@@ -35,8 +39,39 @@ const router = createRouter({
 })
 
 let showNavbarOnNextHome = false
+const heavyRouteNames = new Set(['Home', 'Ricevimento'])
+const loadedHeavyRoutes = new Set<string>()
+let pendingLoadingRouteKey: string | null = null
+
+function getRouteKey(to: RouteLocationNormalizedLoaded) {
+  return String(to.name ?? to.path)
+}
+
+function preloadRouteComponents(to: RouteLocationNormalizedLoaded) {
+  to.matched.forEach((record: RouteRecordNormalized) => {
+    Object.values(record.components || {}).forEach((component) => {
+      if (typeof component === 'function') {
+        void (component as () => unknown)()
+      }
+    })
+  })
+}
 
 router.beforeEach(async (to, from, next) => {
+  // Pre-carichiamo subito i chunk della pagina di destinazione.
+  preloadRouteComponents(to)
+
+  const routeKey = getRouteKey(to)
+  const mustShowLoading = heavyRouteNames.has(routeKey) && !loadedHeavyRoutes.has(routeKey)
+
+  if (mustShowLoading) {
+    beginLoading()
+    pendingLoadingRouteKey = routeKey
+  } else {
+    pendingLoadingRouteKey = null
+    requestLoadingHide()
+  }
+
   const isFirstNavigation = from.matched.length === 0
 
   // Primo accesso diretto a /ricevimento: apri Home ma con navbar attiva in sessione.
@@ -70,6 +105,48 @@ router.beforeEach(async (to, from, next) => {
     if (!loggedIn) return next('/area-riservata/login')
   }
   next()
+})
+
+router.afterEach((to) => {
+  const routeKey = getRouteKey(to)
+
+  if (pendingLoadingRouteKey !== routeKey) {
+    requestLoadingHide()
+    return
+  }
+
+  // Piccolo ritardo per permettere il mount del componente, poi
+  // se nella pagina ci sono video aspettiamo che siano caricati (o timeout) prima di nascondere lo splash
+  setTimeout(async () => {
+    const main = document.querySelector('main')
+    if (!main) {
+      loadedHeavyRoutes.add(routeKey)
+      requestLoadingHide()
+      return
+    }
+
+    const videos = Array.from(main.querySelectorAll('video')) as HTMLVideoElement[]
+    if (videos.length === 0) {
+      void cachePageAssets(main)
+      loadedHeavyRoutes.add(routeKey)
+      requestLoadingHide()
+      return
+    }
+
+    try {
+      // aspetta fino a 12s per tutti i video
+      await waitForVideos(videos, 12000)
+      loadedHeavyRoutes.add(routeKey)
+    } catch (e) {
+      // ignore
+    } finally {
+      void cachePageAssets(main)
+      requestLoadingHide()
+      if (pendingLoadingRouteKey === routeKey) {
+        pendingLoadingRouteKey = null
+      }
+    }
+  }, 50)
 })
 
 export default router

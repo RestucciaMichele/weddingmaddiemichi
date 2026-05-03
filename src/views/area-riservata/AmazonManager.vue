@@ -19,6 +19,7 @@ const imageValidityById = ref<Record<string, boolean>>({});
 
 const showModal = ref(false);
 const isEditing = ref(false);
+const modalError = ref('');
 
 const showDeleteConfirmModal = ref(false);
 const productToDelete = ref<AmazonProductDocument | null>(null);
@@ -129,6 +130,7 @@ const openEditModal = (product: AmazonProductDocument) => {
 const closeModal = () => {
   showModal.value = false;
   selectedImageFile.value = null;
+  modalError.value = '';
   revokeSelectedImageObjectUrl();
 };
 
@@ -146,13 +148,15 @@ const handleSave = async () => {
   const price = Number(currentProduct.value.price);
   const existingImageKey = currentProduct.value.imageKey || '';
 
+  modalError.value = '';
+
   if (!title || Number.isNaN(price) || price <= 0) {
-    console.error('Compila correttamente titolo e prezzo.');
+    modalError.value = 'Compila correttamente titolo e prezzo.';
     return;
   }
 
   if (!selectedImageFile.value && !imageUrl) {
-    console.error('Carica un immagine dal computer.');
+    modalError.value = 'Carica un immagine dal computer.';
     return;
   }
 
@@ -186,6 +190,8 @@ const handleSave = async () => {
     }
     closeModal();
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Errore nel salvataggio del prodotto';
+    modalError.value = errorMessage;
     console.error('Errore nel salvataggio del prodotto: ', error);
   } finally {
     isUploadingImage.value = false;
@@ -323,6 +329,10 @@ const formattedPrice = (price: number) => {
         <h3 class="text-2xl font-bold mb-6">{{ isEditing ? 'Modifica prodotto' : 'Aggiungi prodotto' }}</h3>
 
         <form @submit.prevent="handleSave" class="space-y-4">
+          <div v-if="modalError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {{ modalError }}
+          </div>
+
           <div>
             <label for="imageFile" class="block text-sm font-medium text-gray-700">Immagine locale*</label>
             <input

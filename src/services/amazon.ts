@@ -62,11 +62,16 @@ export async function deleteAmazonProduct(id: string) {
   return deleteDoc(docRef);
 }
 
+const _apiBaseRaw = import.meta.env.VITE_API_BASE_URL || '';
+const _apiBase = _apiBaseRaw.replace(/\/+$/g, '');
+
 export async function uploadAmazonImage(file: File): Promise<AmazonImageUploadResult> {
   const formData = new FormData();
   formData.append('image', file);
 
-  const response = await fetch('/api/amazon-images', {
+  const endpoint = _apiBase ? `${_apiBase}/api/amazon-images` : '/api/amazon-images';
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     body: formData,
   });
@@ -76,7 +81,14 @@ export async function uploadAmazonImage(file: File): Promise<AmazonImageUploadRe
     throw new Error(errorText || 'Upload immagine fallito');
   }
 
-  return (await response.json()) as AmazonImageUploadResult;
+  const result = (await response.json()) as AmazonImageUploadResult;
+
+  // Se l'imageUrl è relativo e abbiamo un apiBase remoto, completalo con il baseURL
+  if (_apiBase && result.imageUrl.startsWith('/')) {
+    result.imageUrl = `${_apiBase}${result.imageUrl}`;
+  }
+
+  return result;
 }
 
 export async function deleteAmazonImage(imageKey: string): Promise<void> {
@@ -84,7 +96,11 @@ export async function deleteAmazonImage(imageKey: string): Promise<void> {
     return;
   }
 
-  const response = await fetch(`/api/amazon-images/${encodeURIComponent(imageKey)}`, {
+  const endpoint = _apiBase 
+    ? `${_apiBase}/api/amazon-images?key=${encodeURIComponent(imageKey)}`
+    : `/api/amazon-images?key=${encodeURIComponent(imageKey)}`;
+
+  const response = await fetch(endpoint, {
     method: 'DELETE',
   });
 
