@@ -58,13 +58,9 @@ const toggleFilterMenu = () => {
   showFilterMenu.value = !showFilterMenu.value
 }
 
-const navigateFromAmazonMenu = (target: 'Home' | 'Ricevimento' | 'Rsvp' | 'Viaggio') => {
+const navigateFromAmazonMenu = (target: 'Home' | 'Viaggio') => {
   showNavMenu.value = false
   if (target === 'Home') keepNavbarVisibleInHome()
-  if (target === 'Rsvp') {
-    router.push({ name: 'Ricevimento', hash: '#rsvp-section' })
-    return
-  }
   if (target === 'Viaggio') {
     router.push({ name: 'ViaggioDiNozze' })
     return
@@ -169,10 +165,8 @@ onUnmounted(() => {
               </button>
 
               <div v-if="showNavMenu" class="absolute right-0 top-11 z-50 w-48 rounded-lg border border-slate-200 bg-white p-2 shadow-xl">
-                <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100" @click="navigateFromAmazonMenu('Home')">Home</button>
-                <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100" @click="navigateFromAmazonMenu('Ricevimento')">Ricevimento</button>
-                <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100" @click="navigateFromAmazonMenu('Rsvp')">RSVP</button>
                 <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100" @click="navigateFromAmazonMenu('Viaggio')">Viaggio di nozze</button>
+                <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100" @click="navigateFromAmazonMenu('Home')">Esci da Amazon</button>
               </div>
             </div>
           </div>

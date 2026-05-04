@@ -258,7 +258,7 @@ const markImageAsInvalid = (productId: string) => {
 
     <div
       v-if="showPromoModal"
-      class="fixed inset-0 z-40 flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-[2px]"
+      class="fixed inset-0 z-60 flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-[2px]"
       @click.self="closePromoModal"
     >
       <div class="amazon-promo-modal relative w-full max-w-md overflow-hidden rounded-[28px] border border-[#d5b36a] bg-[#eaeded] shadow-2xl">
