@@ -226,7 +226,7 @@ onBeforeUnmount(() => {
 .menu-panel-fullscreen button:focus-visible,
 .menu-panel-fullscreen button:active {
   background: transparent;
-  color: #fff;
+  color: #4a2f24;
   transform: translateY(-1px);
   outline: none;
 }

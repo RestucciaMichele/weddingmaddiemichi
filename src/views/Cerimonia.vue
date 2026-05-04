@@ -84,7 +84,7 @@
             <p class="text-lg">
               Presso la Basilica di Santa Maria in Calvenzano<br>
               <span class="block text-sm">
-                Via della Basilica, 20070 Vizzolo Predabissi MI
+                Via della Basilica, 20070 Vizzolo Predabissi (MI)
               </span>
             </p>
             <!-- Bottone visibile solo su mobile -->

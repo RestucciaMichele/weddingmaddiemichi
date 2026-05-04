@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getAmazonProductsRealtime, validateAmazonImageUrl } from '@/services/amazon';
 import type { AmazonProductDocument } from '@/types/amazon';
 import NavbarAmazon from '@/components/NavbarAmazon.vue';
-import tokyoDrimBanner from '@/assets/images/banner_pubblicitario_desktop_1.png';
-import tokyoDrimBannerMobile from '@/assets/images/banner_pubblicitario_mobile_1.png';
+import tokyoDrimBanner from '@/assets/images/banner_pubblicitario_desktop_1.webp';
+import tokyoDrimBannerMobile from '@/assets/images/banner_pubblicitario_mobile_1.webp';
+import ishigakiBanner from '@/assets/images/banner_pubblicitario_2.webp';
+
 
 const products = ref<AmazonProductDocument[]>([]);
 const loading = ref(true);
@@ -15,6 +17,7 @@ const selectedProduct = ref<AmazonProductDocument | null>(null);
 const showSoldProducts = ref(false);
 const showAvailableProducts = ref(true);
 const imageValidityById = ref<Record<string, boolean>>({});
+const showPromoModal = ref(false);
 
 const paymentDetails = {
   intestatario: 'Michele Restuccia',
@@ -23,6 +26,17 @@ const paymentDetails = {
 
 let unsubscribeFromProducts: (() => void) | undefined;
 let imageValidationRunId = 0;
+let promoModalTimer: ReturnType<typeof window.setTimeout> | undefined;
+let previousBodyOverflow = '';
+
+const lockBodyScroll = () => {
+  previousBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+};
+
+const unlockBodyScroll = () => {
+  document.body.style.overflow = previousBodyOverflow;
+};
 
 const validateProductsImages = async (list: AmazonProductDocument[]) => {
   const currentRun = ++imageValidationRunId;
@@ -43,6 +57,10 @@ const validateProductsImages = async (list: AmazonProductDocument[]) => {
 
 
 onMounted(() => {
+  promoModalTimer = window.setTimeout(() => {
+    showPromoModal.value = true;
+  }, 5000);
+
   unsubscribeFromProducts = getAmazonProductsRealtime((data) => {
     products.value = data;
     void (async () => {
@@ -55,8 +73,21 @@ onMounted(() => {
   });
 });
 
+watch(showPromoModal, (isVisible) => {
+  if (isVisible) {
+    lockBodyScroll();
+    return;
+  }
+
+  unlockBodyScroll();
+});
+
 onUnmounted(() => {
   imageValidationRunId += 1;
+  if (promoModalTimer) {
+    window.clearTimeout(promoModalTimer);
+  }
+  unlockBodyScroll();
   if (unsubscribeFromProducts) {
     unsubscribeFromProducts();
   }
@@ -89,6 +120,10 @@ const openPaymentModal = (product: AmazonProductDocument) => {
 const closePaymentModal = () => {
   showPaymentModal.value = false;
   selectedProduct.value = null;
+};
+
+const closePromoModal = () => {
+  showPromoModal.value = false;
 };
 
 const buildCausale = () => {
@@ -220,6 +255,48 @@ const markImageAsInvalid = (productId: string) => {
         </div>
       </div>
     </div>
+
+    <div
+      v-if="showPromoModal"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-[2px]"
+      @click.self="closePromoModal"
+    >
+      <div class="amazon-promo-modal relative w-full max-w-md overflow-hidden rounded-[28px] border border-[#d5b36a] bg-[#eaeded] shadow-2xl">
+        <button
+          type="button"
+          class="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#d9d9d9] bg-white/95 text-2xl font-bold text-slate-600 shadow-sm transition hover:bg-white hover:text-slate-900"
+          aria-label="Chiudi popup promozionale"
+          @click="closePromoModal"
+        >
+          &times;
+        </button>
+
+        <div class="amazon-promo-shell p-3 sm:p-4">
+          <div class="amazon-promo-banner relative overflow-hidden rounded-[22px] border border-white/70 bg-white shadow-[0_16px_40px_-24px_rgba(15,23,42,0.55)]">
+            <img
+              :src="ishigakiBanner"
+              alt="Banner pubblicitario"
+              class="amazon-promo-image block h-auto w-full md:hidden"
+            >
+            <img
+              :src="ishigakiBanner"
+              alt="Banner pubblicitario"
+              class="amazon-promo-image hidden h-auto w-full md:block"
+            >
+
+            <div class="absolute inset-x-0 bottom-3 flex justify-center px-4">
+            <RouterLink
+              to="/amazon/viaggio-di-nozze"
+              class="amazon-promo-cta inline-flex items-center justify-center rounded-full border border-[#f0c14b] bg-[#ffd814] px-7 py-4 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-[#f7ca00]"
+              @click="closePromoModal"
+            >
+              clicca per il viaggio di nozze
+            </RouterLink>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -287,5 +364,32 @@ const markImageAsInvalid = (productId: string) => {
 .amazon-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 20px -8px rgb(15 23 42 / 0.25);
+}
+
+.amazon-promo-modal {
+  animation: amazonPromoIn 0.22s ease-out;
+}
+
+.amazon-promo-shell {
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 35%, rgba(234, 237, 237, 0.96) 100%),
+    linear-gradient(180deg, rgba(149, 214, 255, 0.18) 0%, rgba(234, 237, 237, 0.96) 100%);
+}
+
+.amazon-promo-image {
+  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+
+@keyframes amazonPromoIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>
