@@ -59,7 +59,7 @@ const validateProductsImages = async (list: AmazonProductDocument[]) => {
 onMounted(() => {
   promoModalTimer = window.setTimeout(() => {
     showPromoModal.value = true;
-  }, 5000);
+  }, 10000);
 
   unsubscribeFromProducts = getAmazonProductsRealtime((data) => {
     products.value = data;

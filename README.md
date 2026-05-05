@@ -60,6 +60,7 @@ npx wrangler pages dev dist
 weddingmaddiemichi.pages.dev
 
 TODO:
+- popup no in viaggio page
 - bloccare le sezioni durante scroll
 - quando scrolli icona menu tagliata
 - fare pagina amazon viaggio

@@ -5,6 +5,22 @@ import NavbarAmazon from '@/components/NavbarAmazon.vue';
 const searchQuery = ref('');
 const showSoldProducts = ref(false);
 const showAvailableProducts = ref(true);
+const showPaymentModal = ref(false);
+
+const paymentDetails = {
+  intestatario: 'Michele Restuccia',
+  iban: 'IT05F0306933380100000064278',
+};
+
+const openPaymentModal = () => {
+  showPaymentModal.value = true;
+};
+
+const closePaymentModal = () => {
+  showPaymentModal.value = false;
+};
+
+const buildCausale = () => 'viaggio di nozze <nome cognome>';
 </script>
 
 <template>
@@ -33,37 +49,53 @@ const showAvailableProducts = ref(true);
           Se invece vuoi contribuire a regalarci un ricordo indimenticabile, aiutaci a realizzare un sogno: il nostro
           viaggio di nozze!
         </p>
+        <button
+          type="button"
+          class="mt-7 inline-flex items-center justify-center rounded-full border border-[#f0c14b] bg-[#ffd814] px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#f7ca00]"
+          @click="openPaymentModal"
+        >
+          Contribuisci
+        </button>
       </div>
       
       <div class="itinerary-grid mt-8 grid gap-4 sm:grid-cols-3">
-        <article class="travel-card rounded-2xl border border border-[#f2941b] bg-slate-50 p-5">
-          <div class="flex justify-between items-start">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">Tappa 1</p>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">26-30 Ott</p>
+        <article class="travel-card group rounded-2xl bg-slate-50 p-5">
+          <div class="travel-card__content">
+            <div class="flex justify-between items-start">
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">Tappa 1</p>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">26-30 Ott</p>
+            </div>
+            <h2 class="mt-2 text-2xl font-bold text-slate-900">Kyoto</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Templi, giardini silenziosi e atmosfere tradizionali da
+              vivere con calma.</p>
           </div>
-          <h2 class="mt-2 text-2xl font-bold text-slate-900">Kyoto</h2>
-          <p class="mt-3 text-sm leading-6 text-slate-600">Templi, giardini silenziosi e atmosfere tradizionali da
-            vivere con calma.</p>
+          <img src="@/assets/images/kyoto.jpg" alt="Kyoto" class="travel-card__img" />
         </article>
 
-        <article class="travel-card rounded-2xl border border border-[#f2941b] bg-slate-50 p-5">
-          <div class="flex justify-between items-start">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">Tappa 2</p>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">30 Ott - 5 Nov</p>
+        <article class="travel-card group rounded-2xl bg-slate-50 p-5">
+          <div class="travel-card__content">
+            <div class="flex justify-between items-start">
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">Tappa 2</p>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">30 Ott - 5 Nov</p>
+            </div>
+            <h2 class="mt-2 text-2xl font-bold text-slate-900">Ishigaki</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Mare cristallino, natura e giorni perfetti per staccare
+              davvero la spina.</p>
           </div>
-          <h2 class="mt-2 text-2xl font-bold text-slate-900">Ishigaki</h2>
-          <p class="mt-3 text-sm leading-6 text-slate-600">Mare cristallino, natura e giorni perfetti per staccare
-            davvero la spina.</p>
+          <img src="@/assets/images/ishigaki.webp" alt="Ishigaki" class="travel-card__img" />
         </article>
 
-        <article class="travel-card rounded-2xl border border border-[#f2941b] bg-slate-50 p-5">
-          <div class="flex justify-between items-start">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">Tappa 3</p>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">5-10 Nov</p>
+        <article class="travel-card group rounded-2xl bg-slate-50 p-5">
+          <div class="travel-card__content">
+            <div class="flex justify-between items-start">
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">Tappa 3</p>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#f2941b]">5-10 Nov</p>
+            </div>
+            <h2 class="mt-2 text-2xl font-bold text-slate-900">Tokyo</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Luci, quartieri iconici, cucina incredibile e una città che
+              non smette mai di sorprendere.</p>
           </div>
-          <h2 class="mt-2 text-2xl font-bold text-slate-900">Tokyo</h2>
-          <p class="mt-3 text-sm leading-6 text-slate-600">Luci, quartieri iconici, cucina incredibile e una città che
-            non smette mai di sorprendere.</p>
+          <img src="@/assets/images/tokyo.jpg" alt="Tokyo" class="travel-card__img" />
         </article>
       </div>
 
@@ -72,6 +104,40 @@ const showAvailableProducts = ref(true);
 
     
     </main>
+  </div>
+
+  <div
+    v-if="showPaymentModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+    @click.self="closePaymentModal"
+  >
+    <div class="relative w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+      <button
+        type="button"
+        class="absolute right-3 top-3 text-2xl font-bold text-gray-500 hover:text-gray-800"
+        aria-label="Chiudi finestra contributo"
+        @click="closePaymentModal"
+      >
+        &times;
+      </button>
+      <h3 class="mb-4 text-center text-2xl font-bold text-slate-900">
+        Contribuisci al viaggio di nozze
+      </h3>
+      <div class="space-y-2 text-slate-700">
+        <p><strong>Intestato a:</strong> {{ paymentDetails.intestatario }}</p>
+        <p><strong>IBAN:</strong> {{ paymentDetails.iban }}</p>
+        <p><strong>Causale:</strong> {{ buildCausale() }}</p>
+      </div>
+      <div class="mt-6 flex justify-center">
+        <button
+          type="button"
+          class="rounded bg-gray-800 px-6 py-2 text-white transition hover:bg-gray-700"
+          @click="closePaymentModal"
+        >
+          Chiudi
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -129,27 +195,48 @@ const showAvailableProducts = ref(true);
 }
 
 .travel-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   height: 100%;
+  min-height: 400px;
   background: linear-gradient(180deg, #f8fafc 0%, #f3f7fb 100%);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 16px 30px -24px rgba(120, 79, 13, 0.55);
 }
 
-.experience-box {
-  box-shadow: 0 16px 30px -24px rgba(120, 79, 13, 0.55);
+.travel-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.96) 0%,
+    rgba(248, 250, 252, 0.94) 28%,
+    rgba(248, 250, 252, 0.22) 56%,
+    rgba(248, 250, 252, 0) 72%
+  );
 }
 
-.info-block {
-  box-shadow: 0 14px 26px -24px rgba(15, 23, 42, 0.4);
+.travel-card__img {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 60%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  filter: saturate(1.08) contrast(1.04);
+  transition: transform 0.35s ease;
 }
 
-.mini-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.mini-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -20px rgba(15, 23, 42, 0.4);
+.travel-card__content {
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 640px) {
