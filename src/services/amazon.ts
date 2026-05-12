@@ -65,9 +65,103 @@ export async function deleteAmazonProduct(id: string) {
 const _apiBaseRaw = import.meta.env.VITE_API_BASE_URL || '';
 const _apiBase = _apiBaseRaw.replace(/\/+$/g, '');
 
+const loadImageElementFromFile = (file: File): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Impossibile leggere l\'immagine selezionata'));
+    };
+
+    image.src = objectUrl;
+  });
+};
+
+const canvasToWebpBlob = (canvas: HTMLCanvasElement, quality: number): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Conversione WebP non riuscita'));
+        return;
+      }
+
+      resolve(blob);
+    }, 'image/webp', quality);
+  });
+};
+
+async function convertImageFileToWebp(file: File): Promise<File> {
+  if (file.type === 'image/webp') {
+    return file;
+  }
+
+  const image = await loadImageElementFromFile(file);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas non disponibile per la conversione immagine');
+  }
+
+  context.drawImage(image, 0, 0);
+
+  const webpBlob = await canvasToWebpBlob(canvas, 0.9);
+  const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+  return new File([webpBlob], `${baseName}.webp`, {
+    type: 'image/webp',
+    lastModified: Date.now(),
+  });
+}
+
+export async function downloadImageFromUrl(imageUrl: string): Promise<File> {
+  const response = await fetch(imageUrl);
+
+  if (!response.ok) {
+    throw new Error(`Impossibile scaricare l'immagine: ${response.status} ${response.statusText}`);
+  }
+
+  const contentType = response.headers.get('content-type') || 'image/jpeg';
+  if (!contentType.startsWith('image/')) {
+    throw new Error('L\'URL fornito non contiene un\'immagine valida');
+  }
+
+  const blob = await response.blob();
+  const extension = contentType.includes('image/webp') ? 'webp'
+    : contentType.includes('image/png') ? 'png'
+    : contentType.includes('image/gif') ? 'gif'
+    : 'jpg';
+
+  const file = new File([blob], `image-from-url.${extension}`, {
+    type: contentType,
+    lastModified: Date.now(),
+  });
+
+  return convertImageFileToWebp(file);
+}
+
 export async function uploadAmazonImage(file: File): Promise<AmazonImageUploadResult> {
+  let fileToUpload = file;
+
+  // Converti automaticamente in WebP quando possibile, senza bloccare il flusso se fallisce.
+  if (file.type.startsWith('image/')) {
+    try {
+      fileToUpload = await convertImageFileToWebp(file);
+    } catch (error) {
+      console.warn('Conversione automatica in WebP non riuscita, upload file originale.', error);
+    }
+  }
+
   const formData = new FormData();
-  formData.append('image', file);
+  formData.append('image', fileToUpload);
 
   const endpoint = _apiBase ? `${_apiBase}/api/amazon-images` : '/api/amazon-images';
 

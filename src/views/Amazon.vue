@@ -3,9 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getAmazonProductsRealtime, validateAmazonImageUrl } from '@/services/amazon';
 import type { AmazonProductDocument } from '@/types/amazon';
 import NavbarAmazon from '@/components/NavbarAmazon.vue';
-import tokyoDrimBanner from '@/assets/images/banner_pubblicitario_desktop_1.webp';
-import tokyoDrimBannerMobile from '@/assets/images/banner_pubblicitario_mobile_1.webp';
-import ishigakiBanner from '@/assets/images/banner_pubblicitario_2.webp';
+import tokyoDrimBanner from '@/assets/images/amazon/banner_pubblicitario_desktop_1.webp';
+import tokyoDrimBannerMobile from '@/assets/images/amazon/banner_pubblicitario_mobile_1.webp';
+import ishigakiBanner from '@/assets/images/amazon/banner_pubblicitario_2.webp';
 
 
 const products = ref<AmazonProductDocument[]>([]);

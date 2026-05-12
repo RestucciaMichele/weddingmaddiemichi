@@ -4,6 +4,7 @@ import {
   addAmazonProduct,
   deleteAmazonImage,
   deleteAmazonProduct,
+  downloadImageFromUrl,
   getAmazonProductsRealtime,
   updateAmazonProduct,
   uploadAmazonImage,
@@ -28,6 +29,7 @@ const selectedImageFile = ref<File | null>(null);
 const selectedImagePreview = ref('');
 const selectedImageObjectUrl = ref('');
 const isUploadingImage = ref(false);
+const imageUrlInput = ref('');
 
 const getInitialProductData = (): Partial<AmazonProductDocument> => ({
   imageUrl: '',
@@ -69,6 +71,35 @@ const handleImageChange = (event: Event) => {
   const objectUrl = URL.createObjectURL(file);
   selectedImageObjectUrl.value = objectUrl;
   selectedImagePreview.value = objectUrl;
+};
+
+const handleImageFromUrl = async () => {
+  const url = imageUrlInput.value.trim();
+  if (!url) {
+    modalError.value = 'Inserisci un URL valido';
+    return;
+  }
+
+  try {
+    isUploadingImage.value = true;
+    modalError.value = '';
+
+    const downloadedFile = await downloadImageFromUrl(url);
+    selectedImageFile.value = downloadedFile;
+
+    const objectUrl = URL.createObjectURL(downloadedFile);
+    revokeSelectedImageObjectUrl();
+    selectedImageObjectUrl.value = objectUrl;
+    selectedImagePreview.value = objectUrl;
+
+    imageUrlInput.value = '';
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Errore nel download dell\'immagine';
+    modalError.value = errorMessage;
+    console.error('Errore nel download immagine da URL: ', error);
+  } finally {
+    isUploadingImage.value = false;
+  }
 };
 
 const validateProductsImages = async (list: AmazonProductDocument[]) => {
@@ -132,6 +163,7 @@ const closeModal = () => {
   selectedImageFile.value = null;
   modalError.value = '';
   revokeSelectedImageObjectUrl();
+  imageUrlInput.value = '';
 };
 
 const toggleSold = async (product: AmazonProductDocument) => {
@@ -156,7 +188,7 @@ const handleSave = async () => {
   }
 
   if (!selectedImageFile.value && !imageUrl) {
-    modalError.value = 'Carica un immagine dal computer.';
+    modalError.value = 'Carica un\'immagine: seleziona un file locale oppure inserisci un URL.';
     return;
   }
 
@@ -339,14 +371,38 @@ const formattedPrice = (price: number) => {
               id="imageFile"
               type="file"
               accept="image/*"
-              :required="!isEditing || !currentProduct.imageUrl"
               @change="handleImageChange"
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             >
 
             <p class="mt-1 text-xs text-gray-500">
-              Seleziona un file dal computer. L'immagine verrà salvata su Cloudflare R2.
+              Seleziona un file dal computer. L'immagine verrà convertita automaticamente in WebP e salvata su Cloudflare R2.
             </p>
+
+            <div class="mt-4 border-t border-gray-300 pt-4">
+              <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-2">Oppure carica da URL</label>
+              <div class="flex gap-2">
+                <input
+                  id="imageUrl"
+                  v-model="imageUrlInput"
+                  type="url"
+                  placeholder="https://esempio.com/immagine.jpg"
+                  class="flex-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2"
+                  :disabled="isUploadingImage"
+                >
+                <button
+                  type="button"
+                  @click="handleImageFromUrl"
+                  :disabled="isUploadingImage || !imageUrlInput.trim()"
+                  class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {{ isUploadingImage ? 'Caricamento...' : 'Carica' }}
+                </button>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">
+                Inserisci un URL diretto a un'immagine. Verrà convertita in WebP e caricata automaticamente.
+              </p>
+            </div>
 
             <div class="mt-3 overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50">
               <img

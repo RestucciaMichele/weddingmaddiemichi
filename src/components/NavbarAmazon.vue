@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import amazonLogo from '@/assets/images/Amazon-Logo-White-Transparent.webp'
+import amazonLogo from '@/assets/images/amazon/Amazon-Logo-White-Transparent.webp'
 import { keepNavbarVisibleInHome } from '@/stores/navbarVisibility'
 
 const props = defineProps({
