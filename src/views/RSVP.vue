@@ -1,6 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { inviaRSVP } from '@/services/rsvp'
+import {
+  validateEmail,
+  validateName,
+  validateAdulti,
+  validateBambini,
+  validateNote,
+  getTotalPartySize,
+  shouldSuggestNotes,
+  normalizeEmail,
+  normalizeName,
+} from '@/lib/rsvpValidation'
 import type { RSVPData } from '@/types/rsvp'
 
 const email = ref('')
@@ -11,46 +22,161 @@ const bambiniGratuiti = ref(0)
 const note = ref('')
 const inviato = ref(false)
 const errore = ref('')
+const erroreCampo = ref('')
+const avviso = ref('')
 const loading = ref(false)
+
+const emailInput = ref<HTMLInputElement | null>(null)
+const nomeInput = ref<HTMLInputElement | null>(null)
+const adultiInput = ref<HTMLInputElement | null>(null)
+const bambiniRidottiInput = ref<HTMLInputElement | null>(null)
+const bambiniGratuitiInput = ref<HTMLInputElement | null>(null)
+const noteInput = ref<HTMLTextAreaElement | null>(null)
+
+const fieldRefs = {
+  email: emailInput,
+  nome: nomeInput,
+  adulti: adultiInput,
+  bambiniRidotti: bambiniRidottiInput,
+  bambiniGratuiti: bambiniGratuitiInput,
+  note: noteInput,
+} as const
+
+function clearFieldValidity(field: keyof typeof fieldRefs) {
+  fieldRefs[field].value?.setCustomValidity('')
+}
+
+function showFieldError(field: keyof typeof fieldRefs, message: string) {
+  const fieldRef = fieldRefs[field].value
+  if (fieldRef) {
+    fieldRef.setCustomValidity(message)
+    fieldRef.reportValidity()
+  }
+}
+
+function onEmailInput() {
+  clearFieldValidity('email')
+  if (erroreCampo.value === 'email' && validateEmail(email.value) === null) erroreCampo.value = ''
+}
+
+function onNomeInput() {
+  clearFieldValidity('nome')
+  if (erroreCampo.value === 'nome' && validateName(nome.value) === null) erroreCampo.value = ''
+}
+
+function onAdultiInput() {
+  clearFieldValidity('adulti')
+  if (erroreCampo.value === 'adulti' && validateAdulti(adulti.value) === null) erroreCampo.value = ''
+}
+
+function onBambiniInput() {
+  clearFieldValidity('bambiniRidotti')
+  clearFieldValidity('bambiniGratuiti')
+  if (erroreCampo.value === 'bambini' && validateBambini(bambiniRidotti.value, bambiniGratuiti.value) === null) erroreCampo.value = ''
+}
+
+function onNoteInput() {
+  clearFieldValidity('note')
+  if (erroreCampo.value === 'note' && validateNote(note.value) === null) erroreCampo.value = ''
+}
 
 const riepilogo = ref<RSVPData|null>(null)
 
+const totalPersone = computed(() => getTotalPartySize(adulti.value, bambiniRidotti.value, bambiniGratuiti.value))
+const dovrebbeSuggerireNote = computed(() => shouldSuggestNotes(totalPersone.value))
+
 const submitForm = async () => {
   errore.value = ''
+  avviso.value = ''
+  erroreCampo.value = ''
 
-  if (!nome.value || adulti.value < 1 || !email.value.includes('@')) {
-    errore.value = 'Compila tutti i campi obbligatori correttamente.'
+  clearFieldValidity('email')
+  clearFieldValidity('nome')
+  clearFieldValidity('adulti')
+  clearFieldValidity('bambiniRidotti')
+  clearFieldValidity('bambiniGratuiti')
+  clearFieldValidity('note')
+
+  // ===== VALIDATIONS =====
+  
+  // 1. Email validation
+  const emailError = validateEmail(email.value)
+  if (emailError) {
+    erroreCampo.value = emailError.field
+    showFieldError('email', emailError.message)
     return
   }
 
-  if (!nome.value || adulti.value < 1) {
-    errore.value = 'Inserisci un nome valido e almeno 1 partecipante'
+  // 2. Name validation
+  const nameError = validateName(nome.value)
+  if (nameError) {
+    erroreCampo.value = nameError.field
+    showFieldError('nome', nameError.message)
     return
+  }
+
+  // 3. Adulti validation
+  const adultiError = validateAdulti(adulti.value)
+  if (adultiError) {
+    erroreCampo.value = adultiError.field
+    showFieldError('adulti', adultiError.message)
+    return
+  }
+
+  // 4. Bambini validation
+  const bambiniError = validateBambini(bambiniRidotti.value, bambiniGratuiti.value)
+  if (bambiniError) {
+    erroreCampo.value = bambiniError.field
+    showFieldError('bambiniRidotti', bambiniError.message)
+    showFieldError('bambiniGratuiti', bambiniError.message)
+    return
+  }
+
+  // 5. Note validation
+  const noteError = validateNote(note.value)
+  if (noteError) {
+    erroreCampo.value = noteError.field
+    showFieldError('note', noteError.message)
+    return
+  }
+
+  // 6. Warning if party is large
+  if (dovrebbeSuggerireNote.value) {
+    avviso.value = `⚠️ Total di ${totalPersone.value} persone. Se necessario, aggiungi dettagli nelle note.`
   }
 
   loading.value = true
   try {
+    // Normalize data
+    const normalizedEmail = normalizeEmail(email.value)
+    const normalizedNome = normalizeName(nome.value)
+    console.log('[RSVP] normalizedEmail:', normalizedEmail)
+
+    console.log('[RSVP] Invio form...')
+    // Submit form
     await inviaRSVP({
-      email: email.value,
-      nome: nome.value,
+      email: normalizedEmail,
+      nome: normalizedNome,
       adulti: adulti.value,
       bambiniRidotti: bambiniRidotti.value,
       bambiniGratuiti: bambiniGratuiti.value,
-      note: note.value
+      note: note.value.trim()
     })
+
+    console.log('[RSVP] Form inviato con successo')
     riepilogo.value = {
-      email: email.value,
-      nome: nome.value,
+      email: normalizedEmail,
+      nome: normalizedNome,
       adulti: adulti.value,
       bambiniRidotti: bambiniRidotti.value,
       bambiniGratuiti: bambiniGratuiti.value,
-      note: note.value
+      note: note.value.trim()
     }
     clear()
     inviato.value = true
-  } catch (err) {
-    errore.value = 'Errore durante l’invio. Riprova più tardi.'
-    console.error(err)
+  } catch (err: any) {
+    console.error('[RSVP] Errore nel submit:', err)
+    errore.value = `Errore: ${err.message || "Riprova più tardi o contatta gli sposi."}`
   } finally {
     loading.value = false
   }
@@ -63,6 +189,14 @@ const clear = () => {
   bambiniRidotti.value = 0
   bambiniGratuiti.value = 0
   note.value = ''
+  erroreCampo.value = ''
+
+  clearFieldValidity('email')
+  clearFieldValidity('nome')
+  clearFieldValidity('adulti')
+  clearFieldValidity('bambiniRidotti')
+  clearFieldValidity('bambiniGratuiti')
+  clearFieldValidity('note')
 }
 
 </script>
@@ -102,35 +236,35 @@ const clear = () => {
               <form v-else @submit.prevent="submitForm" class="rsvp-form">
                 <div class="rsvp-form-group">
                   <label for="email">Email *</label>
-                  <input v-model="email" id="email" type="email" class="rsvp-input" required />
+                  <input ref="emailInput" v-model="email" id="email" type="email" @input="onEmailInput" :class="['rsvp-input', { 'rsvp-input-error': erroreCampo === 'email' }]" required />
                 </div>
 
                 <div class="rsvp-form-group">
                   <label for="nome">Nome e Cognome *</label>
-                  <input v-model="nome" id="nome" class="rsvp-input" required />
+                  <input ref="nomeInput" v-model="nome" id="nome" @input="onNomeInput" :class="['rsvp-input', { 'rsvp-input-error': erroreCampo === 'nome' }]" required />
                 </div>
 
                 <div class="rsvp-form-group">
                   <label for="adulti">Numero adulti *</label>
-                  <input v-model="adulti" id="adulti" type="number" min="1" class="rsvp-input" required />
+                  <input ref="adultiInput" v-model.number="adulti" id="adulti" type="number" min="1" @input="onAdultiInput" :class="['rsvp-input', { 'rsvp-input-error': erroreCampo === 'adulti' }]" required />
                 </div>
 
                 <div class="rsvp-form-group">
                   <label for="bambini-ridotti">Numero bambini, dai 3 ai 9 anni</label>
-                  <input v-model="bambiniRidotti" id="bambini-ridotti" type="number" min="0" class="rsvp-input" />
+                    <input ref="bambiniRidottiInput" v-model.number="bambiniRidotti" id="bambini-ridotti" type="number" min="0" @input="onBambiniInput" :class="['rsvp-input', { 'rsvp-input-error': erroreCampo === 'bambini' }]" />
                 </div>
 
                 <div class="rsvp-form-group">
                   <label for="bambini-gratuiti">Numero bambini, minori di 3 anni</label>
-                  <input v-model="bambiniGratuiti" id="bambini-gratuiti" type="number" min="0" class="rsvp-input" />
+                  <input ref="bambiniGratuitiInput" v-model.number="bambiniGratuiti" id="bambini-gratuiti" type="number" min="0" @input="onBambiniInput" :class="['rsvp-input', { 'rsvp-input-error': erroreCampo === 'bambini' }]" />
                 </div>
 
                 <div class="rsvp-form-group">
                   <label for="note">Note (allergie, intolleranze, ecc)</label>
-                  <textarea v-model="note" id="note" class="rsvp-input" rows="2"></textarea>
+                  <textarea ref="noteInput" v-model="note" id="note" @input="onNoteInput" :class="['rsvp-input', { 'rsvp-input-error': erroreCampo === 'note' }]" rows="2"></textarea>
                 </div>
 
-                <div v-if="errore" class="rsvp-error">{{ errore }}</div>
+                <div v-if="avviso" class="rsvp-warning">{{ avviso }}</div>
 
                 <button type="submit" :disabled="loading" class="rsvp-submit-btn">
                   {{ loading ? 'Invio in corso...' : 'Invia' }}
@@ -209,16 +343,22 @@ const clear = () => {
   box-shadow: 0 0 0 3px rgba(79, 96, 6, 0.1);
 }
 
+.rsvp-input.rsvp-input-error,
+.rsvp-input.rsvp-input-error:focus {
+  border-color: #e53e3e !important;
+  box-shadow: 0 0 0 3px rgba(229,62,62,0.08);
+}
+
 .rsvp-input::placeholder {
   color: #aaa;
 }
 
-.rsvp-error {
+.rsvp-warning {
   padding: 0.75rem;
-  background-color: #fee2e2;
-  border: 1px solid #fca5a5;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
   border-radius: 6px;
-  color: #991b1b;
+  color: #92400e;
   font-size: 0.9rem;
 }
 

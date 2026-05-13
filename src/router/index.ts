@@ -76,9 +76,15 @@ router.beforeEach(async (to, from, next) => {
   const isFirstNavigation = from.matched.length === 0
 
   // Primo accesso diretto a /ricevimento: apri Home ma con navbar attiva in sessione.
+  // Tuttavia, se l'URL contiene un hash (ancora) vogliamo permettere la navigazione
+  // diretta verso /ricevimento in modo che il browser possa fare lo scroll alla sezione.
   if (isFirstNavigation && to.name === 'Ricevimento') {
-    showNavbarOnNextHome = true
-    return next({ name: 'Home', replace: true })
+    if (to.hash) {
+      // Lascia proseguire la navigazione verso /ricevimento (niente redirect)
+    } else {
+      showNavbarOnNextHome = true
+      return next({ name: 'Home', replace: true })
+    }
   }
 
   // Gestisci la visibilità della navbar
