@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 const MIN_LOADING_MS = 2000
 const MAX_LOADING_MS = 6000
 
-const loadingVisible = ref(false)
+const loadingVisible = ref(true)
 let loadingStartedAt = 0
 let minTimer: ReturnType<typeof setTimeout> | null = null
 let maxTimer: ReturnType<typeof setTimeout> | null = null

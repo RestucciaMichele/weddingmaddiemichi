@@ -1,38 +1,82 @@
 .home {
-        background-image: image-set(
-            url('../images/20260107_134241-1280.webp') 1x,
-            url('../images/20260107_134241-2560.webp') 2x
-        );
+    background-image: url('../images/homehero.webp');
     background-size: cover;
     background-position: center 47%;
     background-repeat: no-repeat;
     
-    background-attachment: scroll; 
+    background-attachment: scroll;
+    position: relative;
+    overflow: hidden;
 
     height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: end;
     align-items: flex-end;
-    text-shadow: 2px 2px 2px #200E09;
+    text-shadow: 3px 3px 8px rgba(32, 14, 9, 0.8);
     text-align: right;
     padding: 5rem;
 }
 
-/* ENHANCEMENT: Applica l'effetto parallasse SOLO sui dispositivi 
-  con un puntatore fine (es. un mouse). 
-  Questa regola verrà ignorata da iPad e iPhone.
-*/
-@media (pointer: fine) {
-  .home {
-    background-attachment: fixed;
-  }
+/* Gradiente elegante dal basso - più raffinato */
+.home::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65%;
+    background: linear-gradient(
+        to top, 
+        rgba(20, 10, 5, 0.85) 0%,
+        rgba(40, 20, 15, 0.6) 30%,
+        rgba(60, 30, 20, 0.3) 60%,
+        transparent 100%
+    );
+    pointer-events: none;
+}
+
+.maddi-michi-svg {
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    max-width: 85vw;
+    height: auto;
+    z-index: 15;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+    opacity: 0;
+    transform: translateX(-50%) translateY(40px);
+}
+
+.maddi-michi-svg.animate {
+    animation: fadeInUp 2s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.home {
+        background-attachment: scroll;
 }
 
 .titolo {
     font-size: 70px;
     text-align: right;
     color: #fff;
+    font-weight: 300;
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 20;
 }
 
 .frase {
@@ -43,6 +87,9 @@
     text-wrap: balance;
     display: flex;
     flex-direction: column;
+    font-weight: 300;
+    position: relative;
+    z-index: 20;
 }
 
 .frase span {
@@ -53,18 +100,26 @@
     text-align: right;
     padding-right: 0;
     padding-top: 10px;
-    color: white;
+    color: #e0e0e0;
     font-size: 20px;
+    font-weight: 300;
+    position: relative;
+    z-index: 20;
 }
 
 @media screen and (max-width: 960px) { 
     .home {
         background-attachment: scroll;
-        background-position: left 47%;
+        background-position: center 47%;
         
         align-items: flex-start;
         text-align: left;
         padding: 2rem;
+    }
+
+    .maddi-michi-svg {
+        width: 220px;
+        bottom: 25%;
     }
  
     .titolo {

@@ -64,3 +64,68 @@ export function waitForVideos(videos: HTMLVideoElement[] | NodeListOf<HTMLVideoE
     })
   })
 }
+
+export function waitForImages(images: HTMLImageElement[] | NodeListOf<HTMLImageElement>, timeout = 10000): Promise<void> {
+  const list = Array.from(images as HTMLImageElement[])
+  return new Promise((resolve) => {
+    if (list.length === 0) return resolve()
+
+    let remaining = list.length
+    const cleanups: Array<() => void> = []
+    let finished = false
+
+    const tryResolve = () => {
+      if (finished) return
+      if (remaining <= 0) {
+        finished = true
+        cleanup()
+        resolve()
+      }
+    }
+
+    const cleanup = () => {
+      cleanups.forEach((c) => c())
+      cleanups.length = 0
+    }
+
+    const overallTimer = setTimeout(() => {
+      if (finished) return
+      finished = true
+      cleanup()
+      resolve()
+    }, timeout)
+
+    cleanups.push(() => clearTimeout(overallTimer))
+
+    list.forEach((image) => {
+      // If the image is already complete, count it as loaded.
+      if (image.complete && image.naturalWidth > 0) {
+        remaining -= 1
+        tryResolve()
+        return
+      }
+
+      const onReady = () => {
+        remaining -= 1
+        removeListeners()
+        tryResolve()
+      }
+
+      const onError = () => {
+        remaining -= 1
+        removeListeners()
+        tryResolve()
+      }
+
+      const removeListeners = () => {
+        image.removeEventListener('load', onReady)
+        image.removeEventListener('error', onError)
+      }
+
+      image.addEventListener('load', onReady, { once: true })
+      image.addEventListener('error', onError, { once: true })
+
+      cleanups.push(() => removeListeners())
+    })
+  })
+}

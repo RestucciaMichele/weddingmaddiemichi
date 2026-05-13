@@ -8,7 +8,7 @@ import {
   hasNavbarVisibilityMemoryInHome,
 } from '@/stores/navbarVisibility'
 import { beginLoading, requestLoadingHide } from '@/stores/loadingScreen'
-import { waitForVideos } from '@/lib/waitForMedia'
+import { waitForImages, waitForVideos } from '@/lib/waitForMedia'
 import { cachePageAssets } from '@/lib/pageAssetCache'
 
 const routes = [
@@ -39,7 +39,7 @@ const router = createRouter({
 })
 
 let showNavbarOnNextHome = false
-const heavyRouteNames = new Set(['Home', 'Ricevimento'])
+const firstLoadOnlyRouteNames = new Set(['Home', 'Ricevimento'])
 const loadedHeavyRoutes = new Set<string>()
 let pendingLoadingRouteKey: string | null = null
 
@@ -62,7 +62,8 @@ router.beforeEach(async (to, from, next) => {
   preloadRouteComponents(to)
 
   const routeKey = getRouteKey(to)
-  const mustShowLoading = heavyRouteNames.has(routeKey) && !loadedHeavyRoutes.has(routeKey)
+  const mustShowLoading =
+    firstLoadOnlyRouteNames.has(routeKey) && !loadedHeavyRoutes.has(routeKey)
 
   if (mustShowLoading) {
     beginLoading()
@@ -120,27 +121,32 @@ router.afterEach((to) => {
   setTimeout(async () => {
     const main = document.querySelector('main')
     if (!main) {
-      loadedHeavyRoutes.add(routeKey)
+      if (firstLoadOnlyRouteNames.has(routeKey)) {
+        loadedHeavyRoutes.add(routeKey)
+      }
       requestLoadingHide()
       return
     }
 
     const videos = Array.from(main.querySelectorAll('video')) as HTMLVideoElement[]
-    if (videos.length === 0) {
-      void cachePageAssets(main)
-      loadedHeavyRoutes.add(routeKey)
-      requestLoadingHide()
-      return
-    }
+    const images = Array.from(main.querySelectorAll('img')) as HTMLImageElement[]
 
     try {
-      // aspetta fino a 12s per tutti i video
-      await waitForVideos(videos, 12000)
-      loadedHeavyRoutes.add(routeKey)
+      await Promise.all([
+        // aspetta fino a 12s per tutti i video
+        waitForVideos(videos, 12000),
+        // aspetta fino a 12s per tutte le immagini
+        waitForImages(images, 12000),
+        // include anche background-image CSS e source media
+        cachePageAssets(main),
+      ])
+
+      if (firstLoadOnlyRouteNames.has(routeKey)) {
+        loadedHeavyRoutes.add(routeKey)
+      }
     } catch (e) {
       // ignore
     } finally {
-      void cachePageAssets(main)
       requestLoadingHide()
       if (pendingLoadingRouteKey === routeKey) {
         pendingLoadingRouteKey = null

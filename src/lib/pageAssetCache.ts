@@ -16,10 +16,38 @@ function isSameOrigin(url: string) {
   }
 }
 
+function extractBackgroundUrls(value: string) {
+  const urls: string[] = []
+  const pattern = /url\((['"]?)(.*?)\1\)/g
+  let match: RegExpExecArray | null
+
+  while ((match = pattern.exec(value)) !== null) {
+    if (match[2]) urls.push(match[2])
+  }
+
+  return urls
+}
+
 export async function cachePageAssets(root: ParentNode) {
   if (!('caches' in window)) return
 
   const urls = new Set<string>()
+
+  if (root instanceof Element) {
+    const computedRootStyle = getComputedStyle(root)
+    extractBackgroundUrls(computedRootStyle.backgroundImage).forEach((url) => {
+      if (isSameOrigin(url)) urls.add(url)
+    })
+  }
+
+  const elementNodes = root instanceof Document ? Array.from(root.querySelectorAll<HTMLElement>('*')) : Array.from(root.querySelectorAll<HTMLElement>('*'))
+
+  elementNodes.forEach((element) => {
+    const computedStyle = getComputedStyle(element)
+    extractBackgroundUrls(computedStyle.backgroundImage).forEach((url) => {
+      if (isSameOrigin(url)) urls.add(url)
+    })
+  })
 
   root.querySelectorAll<HTMLImageElement>('img[src]').forEach((image) => {
     if (image.src && isSameOrigin(image.src)) urls.add(image.src)

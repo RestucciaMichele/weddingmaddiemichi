@@ -1,12 +1,14 @@
 <template>
   <transition name="fade" appear>
     <div v-if="isLoading" class="loading-screen" role="status" aria-live="polite">
-      <div class="loading-content">
-        <img src="/logo.svg" alt="logo" class="logo" />
-        <div class="loading-dots" aria-hidden="true">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
+      <div class="loading-stage">
+        <div class="loading-content">
+          <img src="/logo.svg" alt="logo" class="logo" />
+          <div class="loading-dots" aria-hidden="true">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -57,9 +59,17 @@ onUnmounted(() => {
   inset: 0;
   z-index: 9999;
   background-color: #7a5240;
+  overflow: hidden;
+}
+
+.loading-stage {
+  width: 100%;
+  height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  padding: 0 24px;
 }
 
 .loading-content {
@@ -117,10 +127,17 @@ onUnmounted(() => {
   }
 }
 
-.fade-enter-active, .fade-leave-active {
+/* Fade: no enter animation (instant), but smooth leave (fade-out) */
+.fade-enter-active {
+  transition: none;
+}
+.fade-enter-from, .fade-enter-to {
+  opacity: 1;
+}
+.fade-leave-active {
   transition: opacity .5s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-leave-to {
   opacity: 0;
 }
 </style>
