@@ -6,6 +6,7 @@ import NavbarAmazon from '@/components/NavbarAmazon.vue';
 import tokyoDrimBanner from '@/assets/images/amazon/banner_pubblicitario_desktop_1.webp';
 import tokyoDrimBannerMobile from '@/assets/images/amazon/banner_pubblicitario_mobile_1.webp';
 import ishigakiBanner from '@/assets/images/amazon/banner_pubblicitario_2.webp';
+import ishigakiBannerAlt from '@/assets/images/amazon/banner_pubblicitario_3.png';
 
 
 const products = ref<AmazonProductDocument[]>([]);
@@ -18,6 +19,7 @@ const showSoldProducts = ref(false);
 const showAvailableProducts = ref(true);
 const imageValidityById = ref<Record<string, boolean>>({});
 const showPromoModal = ref(false);
+const promoBanner = Math.random() < 0.5 ? ishigakiBanner : ishigakiBannerAlt;
 
 const paymentDetails = {
   intestatario: 'Michele Restuccia',
@@ -271,15 +273,15 @@ const markImageAsInvalid = (productId: string) => {
           &times;
         </button>
 
-        <div class="amazon-promo-shell p-3 sm:p-4">
-          <div class="amazon-promo-banner relative overflow-hidden rounded-[22px] border border-white/70 bg-white shadow-[0_16px_40px_-24px_rgba(15,23,42,0.55)]">
+        <div class="amazon-promo-shell">
+          <div class="amazon-promo-banner relative overflow-hidden">
             <img
-              :src="ishigakiBanner"
+              :src="promoBanner"
               alt="Banner pubblicitario"
               class="amazon-promo-image block h-auto w-full md:hidden"
             >
             <img
-              :src="ishigakiBanner"
+              :src="promoBanner"
               alt="Banner pubblicitario"
               class="amazon-promo-image hidden h-auto w-full md:block"
             >
@@ -371,9 +373,7 @@ const markImageAsInvalid = (productId: string) => {
 }
 
 .amazon-promo-shell {
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 35%, rgba(234, 237, 237, 0.96) 100%),
-    linear-gradient(180deg, rgba(149, 214, 255, 0.18) 0%, rgba(234, 237, 237, 0.96) 100%);
+  background: transparent;
 }
 
 .amazon-promo-image {
