@@ -1,4 +1,25 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import videoUrl from '../assets/mp4/ricevimento-ottimizzato.mp4'
+
+onMounted(() => {
+  const v = document.querySelector('.cerimonia-card-video video') as HTMLVideoElement | null
+  if (!v) return
+
+  const start = () => {
+    v.src = videoUrl
+    v.load()
+    const p = v.play()
+    if (p && (p as Promise<void>).catch) (p as Promise<void>).catch(() => {})
+  }
+
+  if ('requestIdleCallback' in window) {
+    ;(window as any).requestIdleCallback(start)
+  } else {
+    ;(window as any).addEventListener('load', start, { once: true })
+    setTimeout(start, 1000)
+  }
+})
 </script>
 
 <template>
@@ -46,13 +67,7 @@
         <!-- Colonna destra: solo video -->
         <div class="flex justify-center">
           <div class="cerimonia-card-video">
-            <video
-              src="../assets/mp4/ricevimento-ottimizzato.mp4"
-              autoplay
-              loop
-              muted
-              playsinline
-            >
+            <video autoplay loop muted playsinline preload="none">
               Il tuo browser non supporta il video.
             </video>
           </div>

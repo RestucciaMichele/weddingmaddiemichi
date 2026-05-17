@@ -2,13 +2,14 @@
 import { ref, watch } from 'vue'
 import { useLoadingScreen } from '@/stores/loadingScreen'
 import '../assets/styles/home.css'
-import heroImage from '../assets/images/homehero.webp'
+import heroImage from '../assets/images/homehero_desktop.webp'
+import heroImageMobile from '../assets/images/homehero_mobile.webp'
 import maddieMichiSvg from '../assets/SVG/MaddieMichi.svg'
 
 // Preload the hero image at module level so the browser keeps it
 // in memory cache — it won't need to re-fetch it when scrolling back.
 const _preload = new Image()
-_preload.src = heroImage
+_preload.src = window.matchMedia('(max-width: 960px)').matches ? heroImageMobile : heroImage
 
 const { isLoading } = useLoadingScreen()
 const showSvgAnimation = ref(false)
@@ -30,6 +31,6 @@ watch(
 
 <template>
     <div class="home">
-        <img :src="maddieMichiSvg" alt="Maddi e Michi" class="maddi-michi-svg" :class="{ 'animate': showSvgAnimation }" />
+        <img :src="maddieMichiSvg" alt="Maddi e Michi" width="400" height="150" class="maddi-michi-svg" :class="{ 'animate': showSvgAnimation }" />
     </div>
 </template>

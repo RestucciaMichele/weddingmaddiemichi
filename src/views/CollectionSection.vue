@@ -639,8 +639,10 @@ onBeforeUnmount(() => {
         :alt="slide.alt"
         class="collection-image"
         :loading="index < 2 ? 'eager' : 'lazy'"
-        :fetchpriority="index === 0 ? 'high' : 'low'"
+        fetchpriority="auto"
         decoding="async"
+        width="826"
+        height="1101"
       />
     </article>
 

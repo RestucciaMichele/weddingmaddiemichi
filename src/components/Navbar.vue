@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useLoadingScreen } from '@/stores/loadingScreen'
 
-const isMobileMenuOpen = ref(false)
+const isNavbarMenuOpen = ref(false)
 const router = useRouter()
 const route = useRoute()
 const { isLoading } = useLoadingScreen()
@@ -15,7 +15,7 @@ let navigationTimer: number | null = null
 const scrollKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '])
 
 function blockScrollEvent(event: Event) {
-  if (!isMobileMenuOpen.value) return
+  if (!isNavbarMenuOpen.value) return
   event.preventDefault()
   event.stopPropagation()
   if ('stopImmediatePropagation' in event) {
@@ -24,7 +24,7 @@ function blockScrollEvent(event: Event) {
 }
 
 function blockScrollKeyEvent(event: Event) {
-  if (!isMobileMenuOpen.value) return
+  if (!isNavbarMenuOpen.value) return
   if (!(event instanceof KeyboardEvent)) return
   if (!scrollKeys.has(event.key)) return
   event.preventDefault()
@@ -45,16 +45,16 @@ function setPageScrollLock(isLocked: boolean) {
   setScrollGuards(isLocked)
 }
 
-function toggleMobileMenu() {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
+function toggleNavbarMenu() {
+  isNavbarMenuOpen.value = !isNavbarMenuOpen.value
 }
 
-function closeMobileMenu() {
-  isMobileMenuOpen.value = false
+function closeNavbarMenu() {
+  isNavbarMenuOpen.value = false
 }
 
-function navigateFromMobileMenu(target: { name: 'Home' | 'Ricevimento' | 'Amazon'; hash?: string }) {
-  closeMobileMenu()
+function navigateFromNavbarMenu(target: { name: 'Home' | 'Ricevimento' | 'Amazon'; hash?: string }) {
+  closeNavbarMenu()
 
   if (route.name === target.name && route.hash === (target.hash ?? '')) return
 
@@ -69,7 +69,7 @@ function navigateFromMobileMenu(target: { name: 'Home' | 'Ricevimento' | 'Amazon
 }
 
 watch(
-  isMobileMenuOpen,
+  isNavbarMenuOpen,
   (isOpen) => {
     setPageScrollLock(isOpen)
   },
@@ -96,8 +96,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="navbar glass-navbar fixed top-4 right-4 left-auto w-auto z-[120]">
-    <button class="menu-trigger" :class="{ 'is-open': isMobileMenuOpen, 'animate': showMenuAnimation }" aria-label="Apri menu" @click="toggleMobileMenu">
-      <svg v-if="!isMobileMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <button class="menu-trigger" :class="{ 'is-open': isNavbarMenuOpen, 'animate': showMenuAnimation }" aria-label="Apri menu" @click="toggleNavbarMenu">
+      <svg v-if="!isNavbarMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
       <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,13 +106,13 @@ onBeforeUnmount(() => {
     </button>
 
     <Transition name="menu-panel">
-      <div v-if="isMobileMenuOpen" class="menu-overlay" @click.self="closeMobileMenu">
+      <div v-if="isNavbarMenuOpen" class="menu-overlay" @click.self="closeNavbarMenu">
         <ul class="menu-panel-fullscreen">
-          <li><button type="button" @click="navigateFromMobileMenu({ name: 'Home' })">Home</button></li>
-          <li><button type="button" @click="navigateFromMobileMenu({ name: 'Home', hash: '#cerimonia' })">Cerimonia</button></li>
-          <li><button type="button" @click="navigateFromMobileMenu({ name: 'Ricevimento' })">Ricevimento</button></li>
-          <li><button type="button" @click="navigateFromMobileMenu({ name: 'Ricevimento', hash: '#rsvp-section' })">RSVP</button></li>
-          <li><button type="button" @click="navigateFromMobileMenu({ name: 'Amazon' })">Lista nozze</button></li>
+          <li><button type="button" @click="navigateFromNavbarMenu({ name: 'Home' })">Home</button></li>
+          <li><button type="button" @click="navigateFromNavbarMenu({ name: 'Home', hash: '#cerimonia' })">Cerimonia</button></li>
+          <li><button type="button" @click="navigateFromNavbarMenu({ name: 'Ricevimento', hash: '#ricevimento' })">Ricevimento</button></li>
+          <li><button type="button" @click="navigateFromNavbarMenu({ name: 'Ricevimento', hash: '#rsvp-section' })">RSVP</button></li>
+          <li><button type="button" @click="navigateFromNavbarMenu({ name: 'Amazon' })">Lista nozze</button></li>
         </ul>
       </div>
     </Transition>

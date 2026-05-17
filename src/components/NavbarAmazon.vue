@@ -84,7 +84,7 @@ onUnmounted(() => {
     <div class="max-w-7xl mx-auto">
       <div class="hidden items-center gap-6 md:grid md:grid-cols-[auto_1fr_auto_auto]">
         <RouterLink to="/amazon" class="flex min-w-0 items-center gap-3" aria-label="Vai alla pagina Amazon" @click="resetSearch">
-          <img :src="amazonLogo" alt="Amazon" class="h-10 object-contain" />
+          <img :src="amazonLogo" alt="Amazon" width="100" height="40" class="h-10 w-auto object-contain" />
         </RouterLink>
         <div class="mx-auto w-full max-w-4xl">
           <label for="amazon-search-desktop" class="sr-only">Cerca prodotto</label>
@@ -139,7 +139,7 @@ onUnmounted(() => {
       <div class="md:hidden">
         <div class="flex items-center justify-between gap-3">
           <RouterLink to="/amazon" class="flex min-w-0 items-center gap-3" aria-label="Vai alla pagina Amazon" @click="resetSearch">
-            <img :src="amazonLogo" alt="Amazon" class="h-7 object-contain" />
+            <img :src="amazonLogo" alt="Amazon" width="70" height="28" class="h-7 w-auto object-contain" />
           </RouterLink>
           <div class="flex items-center gap-2">
             <div class="flex items-center justify-center gap-2 text-slate-200" aria-hidden="true">

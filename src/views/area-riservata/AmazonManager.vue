@@ -323,7 +323,7 @@ const formattedPrice = (price: number) => {
               >
                 Venduto
               </span>
-              <img :src="product.imageUrl" :alt="product.title" class="w-full h-full object-contain">
+              <img :src="product.imageUrl" :alt="product.title" width="400" height="400" class="w-full h-full object-contain">
             </div>
 
             <div>
@@ -409,6 +409,8 @@ const formattedPrice = (price: number) => {
                 v-if="selectedImagePreview"
                 :src="selectedImagePreview"
                 alt="Anteprima immagine"
+                width="400"
+                height="400"
                 class="h-56 w-full bg-white object-contain"
               >
               <div v-else class="flex h-56 items-center justify-center text-sm text-gray-400">

@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 
-const MIN_LOADING_MS = 2000
-const MAX_LOADING_MS = 6000
+const MIN_LOADING_MS = 1000
+const MAX_LOADING_MS = 3000
 
 const loadingVisible = ref(true)
 let loadingStartedAt = 0

@@ -3,7 +3,7 @@
     <div v-if="isLoading" class="loading-screen" role="status" aria-live="polite">
       <div class="loading-stage">
         <div class="loading-content">
-          <img src="/logo.svg" alt="logo" class="logo" />
+          <img src="/logo.svg" alt="logo" width="150" height="150" class="logo" />
           <div class="loading-dots" aria-hidden="true">
             <span class="dot"></span>
             <span class="dot"></span>

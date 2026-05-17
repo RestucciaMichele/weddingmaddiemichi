@@ -1,5 +1,5 @@
 .home {
-    background-image: url('../images/homehero.webp');
+    background-image: url('../images/homehero_mobile.webp');
     background-size: cover;
     background-position: center 47%;
     background-repeat: no-repeat;
@@ -137,5 +137,11 @@
 
     .autore {
         font-size: 18px;
+    }
+}
+
+@media screen and (min-width: 961px) {
+    .home {
+        background-image: url('../images/homehero_desktop.webp');
     }
 }

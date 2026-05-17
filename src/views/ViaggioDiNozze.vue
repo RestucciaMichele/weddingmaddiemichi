@@ -82,7 +82,7 @@ const buildCausale = () => 'viaggio di nozze <nome cognome>';
             <p class="mt-3 text-sm leading-6 text-slate-600">Mare cristallino, natura e giorni perfetti per staccare
               davvero la spina.</p>
           </div>
-          <img src="@/assets/images/amazon/ishigaki.webp" alt="Ishigaki" class="travel-card__img" />
+          <img src="@/assets/images/amazon/ishigaki.webp" alt="Ishigaki" width="800" height="600" class="travel-card__img" />
         </article>
 
         <article class="travel-card group rounded-2xl bg-slate-50 p-5">
@@ -95,7 +95,7 @@ const buildCausale = () => 'viaggio di nozze <nome cognome>';
             <p class="mt-3 text-sm leading-6 text-slate-600">Luci, quartieri iconici, cucina incredibile e una città che
               non smette mai di sorprendere.</p>
           </div>
-          <img src="@/assets/images/amazon/tokyo.jpg" alt="Tokyo" class="travel-card__img" />
+          <img src="@/assets/images/amazon/tokyo.jpg" alt="Tokyo" width="800" height="600" class="travel-card__img" />
         </article>
       </div>
 

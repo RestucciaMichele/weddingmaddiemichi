@@ -6,7 +6,7 @@ import NavbarAmazon from '@/components/NavbarAmazon.vue';
 import tokyoDrimBanner from '@/assets/images/amazon/banner_pubblicitario_desktop_1.webp';
 import tokyoDrimBannerMobile from '@/assets/images/amazon/banner_pubblicitario_mobile_1.webp';
 import ishigakiBanner from '@/assets/images/amazon/banner_pubblicitario_2.webp';
-import ishigakiBannerAlt from '@/assets/images/amazon/banner_pubblicitario_3.png';
+import ishigakiBannerAlt from '@/assets/images/amazon/banner_pubblicitario_3.webp';
 
 
 const products = ref<AmazonProductDocument[]>([]);
@@ -157,11 +157,15 @@ const markImageAsInvalid = (productId: string) => {
           <img
             :src="tokyoDrimBanner"
             alt="Tokyo Drim Banner"
+            width="1200"
+            height="300"
             class="amazon-banner-image hidden h-auto w-full object-cover rounded-xl md:block"
           >
           <img
             :src="tokyoDrimBannerMobile"
             alt="Tokyo Dream Il viaggio di nozze"
+            width="800"
+            height="600"
             class="amazon-banner-image amazon-banner-image-mobile block h-auto w-full object-cover rounded-xl md:hidden"
           >
         </RouterLink>
@@ -200,6 +204,8 @@ const markImageAsInvalid = (productId: string) => {
             <img
               :src="product.imageUrl"
               :alt="product.title"
+              width="400"
+              height="400"
               class="h-full w-full object-contain"
               loading="lazy"
               @error="markImageAsInvalid(product.id)"
@@ -278,11 +284,15 @@ const markImageAsInvalid = (productId: string) => {
             <img
               :src="promoBanner"
               alt="Banner pubblicitario"
+              width="800"
+              height="800"
               class="amazon-promo-image block h-auto w-full md:hidden"
             >
             <img
               :src="promoBanner"
               alt="Banner pubblicitario"
+              width="1200"
+              height="1200"
               class="amazon-promo-image hidden h-auto w-full md:block"
             >
 
